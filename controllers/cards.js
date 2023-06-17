@@ -13,8 +13,7 @@ const createCard = (req, res) => {
   newCard.owner = req.user._id;
   Card.create(newCard)
     .populate('owner', '-__v')
-    .populate('likes', '-__v')
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({

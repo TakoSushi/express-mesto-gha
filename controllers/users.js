@@ -3,7 +3,11 @@ const User = require('../models/user');
 const createUser = (req, res) => {
   const newUser = req.body;
   User.create(newUser)
-    .then(() => res.send({ ...newUser }))
+    .then(({
+      name, about, avatar, _id,
+    }) => res.send({
+      name, about, avatar, _id,
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({
@@ -27,19 +31,27 @@ const getUserById = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: 'Пользователь не найден' });
       }
-      return res.send({ ...user });
+      return res.send(user);
     })
-    .catch(() => res.status(500).send({ message: 'Ошибка сервера' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Некоректный id пользователя' });
+      }
+      return res.status(500).send({ message: 'Ошибка сервера' });
+    });
 };
 
 const changeUserData = (req, res) => {
   const newUserData = req.body;
-  User.findByIdAndUpdate(req.user._id, newUserData, { new: true, fields: '-__v' })
+  User.findByIdAndUpdate(
+    req.user._id,
+    newUserData,
+    { new: true, fields: '-__v', runValidators: true },
+  )
     .then((user) => {
       if (!user) {
         return res.status(404).send({ message: 'Пользователь не найден' });
       }
-
       return res.send({ user });
     })
     .catch((err) => {
