@@ -2,8 +2,8 @@ const Card = require('../models/card');
 
 const getAllCards = (req, res) => {
   Card.find({}, '-__v')
-    .populate('owner', '-__v')
-    .populate('likes', '-__v')
+    .populate('owner')
+    .populate('likes')
     .then((Cards) => res.status(200).send(Cards))
     .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
 };
@@ -28,15 +28,14 @@ const createCard = (req, res) => {
 
 const deleteCardById = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => {
-      if (!card) {
+    .orFail(new Error('NotValidId'))
+    .then(() => res.status(200).send({ message: 'Пост удален' }))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.status(200).send({ message: 'Пост удален' });
-    })
-    .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Некоректный id пользователя' });
+        return res.status(400).send({ message: 'Некоректный id карточки' });
       }
       return res.status(500).send({ message: 'Ошибка сервера' });
     });
@@ -48,16 +47,15 @@ const addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .populate('likes', '-__v')
-    .then((card) => {
-      if (!card) {
+    .populate('likes')
+    .orFail(new Error('NotValidId'))
+    .then((card) => res.status(201).send({ likes: card.likes }))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.status(201).send({ likes: card.likes });
-    })
-    .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Некоректный id пользователя' });
+        return res.status(400).send({ message: 'Некоректный id карточки' });
       }
       return res.status(500).send({ message: 'Ошибка сервера' });
     });
@@ -69,14 +67,13 @@ const deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .populate('likes', '-__v')
-    .then((card) => {
-      if (!card) {
+    .populate('likes')
+    .orFail(new Error('NotValidId'))
+    .then((card) => res.status(200).send(card.likes))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.status(200).send(card.likes);
-    })
-    .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Некоректный id пользователя' });
       }
