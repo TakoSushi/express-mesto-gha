@@ -12,8 +12,9 @@ const createCard = (req, res) => {
   const newCard = req.body;
   newCard.owner = req.user._id;
   Card.create(newCard)
-    .populate('owner', '-__v')
-    .then((card) => res.status(201).send(card))
+    .then((card) => {
+      res.status(201).send(card);
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({
@@ -31,9 +32,14 @@ const deleteCardById = (req, res) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.send({ data: card });
+      return res.status(200).send({ message: 'Пост удален' });
     })
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Некоректный id пользователя' });
+      }
+      return res.status(500).send({ message: 'Ошибка сервера' });
+    });
 };
 
 const addLike = (req, res) => {
@@ -47,7 +53,7 @@ const addLike = (req, res) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.status(200).send(card.likes);
+      return res.status(201).send({ likes: card.likes });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
