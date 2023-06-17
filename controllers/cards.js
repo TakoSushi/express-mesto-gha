@@ -47,9 +47,14 @@ const addLike = (req, res) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.send({ likes: card.likes });
+      return res.status(200).send(card.likes);
     })
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Некоректный id пользователя' });
+      }
+      return res.status(500).send({ message: 'Ошибка сервера' });
+    });
 };
 
 const deleteLike = (req, res) => {
@@ -63,9 +68,14 @@ const deleteLike = (req, res) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.send({ likes: card.likes });
+      return res.status(200).send(card.likes);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Некоректный id пользователя' });
+      }
+      return res.status(500).send({ message: 'Ошибка сервера' });
+    });
 };
 
 module.exports = {
