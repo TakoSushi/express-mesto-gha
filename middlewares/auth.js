@@ -8,7 +8,6 @@ module.exports = (req, res, next) => {
 
   const token = authorization.replace('Bearer ', '');
   let payload;
-  console.log(req.headers);
   try {
     payload = jwt.verify(token, 'some-secret-key');
   } catch (err) {
@@ -16,6 +15,5 @@ module.exports = (req, res, next) => {
   }
 
   req.user = payload;
-  console.log('Авторизация пройдена');
-  return next();
+  next();
 };
