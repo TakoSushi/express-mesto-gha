@@ -1,5 +1,6 @@
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
 const createUser = (req, res) => {
   const newUser = req.body;
@@ -35,6 +36,21 @@ const getAllUsers = (req, res) => {
 
 const getUserById = (req, res) => {
   User.findById(req.params.userId)
+    .orFail(new Error('NotValidId'))
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
+        return res.status(404).send({ message: 'Пользователь не найден' });
+      }
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Некоректный id пользователя' });
+      }
+      return res.status(500).send({ message: 'Ошибка сервера' });
+    });
+};
+
+const getUserData = (req, res) => {
+  User.findById(req.user._id)
     .orFail(new Error('NotValidId'))
     .then((user) => res.send(user))
     .catch((err) => {
@@ -90,10 +106,36 @@ const changeUserAvatar = (req, res) => {
     });
 };
 
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        'some-secret-key',
+        { expiresIn: 3600 }, // токен будет просрочен через час после создания
+      );
+      res.status(200).cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      })
+        .end();
+    })
+    .catch((err) => {
+      if (err.message === 'NotValidEmailOrPassword') {
+        return res.status(401).send({ message: 'Неправильные почта или пароль' });
+      }
+      return res.status(500).send({ message: 'Произошла ошибка' });
+    });
+};
+
 module.exports = {
   createUser,
   getAllUsers,
+  getUserData,
   getUserById,
   changeUserData,
   changeUserAvatar,
+  login,
 };
