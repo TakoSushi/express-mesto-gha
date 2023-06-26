@@ -19,15 +19,6 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-// app.use((req, res, next) => {
-//   req.user = {
-//     _id: '649415b270c15807c3cd774c',
-//   };
-//   console.log(req.cookies.jwt);
-
-//   next();
-// });
-
 app.use(routes);
 
 app.listen(PORT, () => {

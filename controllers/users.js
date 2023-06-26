@@ -2,9 +2,17 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
+const IncorrectLoginData = require('../errors/incorrect-login-data');
+const AuthorizationError = require('../errors/authorization-error');
 
 const createUser = (req, res, next) => {
   const newUser = req.body;
+  if (!newUser.password || !newUser.email) {
+    throw new AuthorizationError('Вы забыли указать почту или пароль');
+  }
+  if (newUser.password.length < 8) {
+    throw new IncorrectLoginData('Минимальная длина пароля - 8 символов');
+  }
   bcrypt.hash(newUser.password, 10)
     .then((hash) => User.create({
       name: newUser.name,
@@ -14,9 +22,9 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then(({
-      name, about, avatar, _id, email, password,
+      name, about, avatar, _id, email,
     }) => res.status(201).send({
-      name, about, avatar, _id, email, password,
+      name, about, avatar, _id, email,
     }))
     .catch(next);
 };
@@ -27,12 +35,12 @@ const getAllUsers = (req, res, next) => {
     .catch(next);
 };
 
-// const getUserById = (req, res, next) => {
-//   User.findById(req.params.userId)
-//     .orFail(new NotFoundError('Пользователь не найден'))
-//     .then((user) => res.send(user))
-//     .catch(next);
-// };
+const getUserById = (req, res, next) => {
+  User.findById(req.params.userId)
+    .orFail(new NotFoundError('Пользователь не найден'))
+    .then((user) => res.send(user))
+    .catch(next);
+};
 
 const getUserData = (req, res, next) => {
   User.findById(req.user._id)
@@ -63,7 +71,12 @@ const changeUserAvatar = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
-
+  if (!password || !email) {
+    throw new AuthorizationError('Вы забыли указать почту или пароль');
+  }
+  if (password.length < 8) {
+    throw new IncorrectLoginData('Минимальная длина пароля - 8 символов');
+  }
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
@@ -75,6 +88,7 @@ const login = (req, res, next) => {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
       })
+        .send({ message: 'Авторизация прошла успешно' })
         .end();
     })
     .catch(next);
@@ -84,7 +98,7 @@ module.exports = {
   createUser,
   getAllUsers,
   getUserData,
-  // getUserById,
+  getUserById,
   changeUserData,
   changeUserAvatar,
   login,

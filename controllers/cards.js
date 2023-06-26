@@ -46,7 +46,7 @@ const deleteLike = (req, res, next) => {
   )
     .populate('likes')
     .orFail(new NotFoundError('Карточка не найдена'))
-    .then((card) => res.status(200).send(card.likes))
+    .then((card) => res.status(403).send(card.likes))
     .catch(next);
 };
 
