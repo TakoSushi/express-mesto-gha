@@ -2,13 +2,6 @@
 
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
-  if (err.name === 'ValidationError') {
-    return res.status(400).send({
-      message: `Переданые данные некорректны.
-      ${Object.values(err.errors).map(() => err.message).join(', ')}`,
-    });
-  }
-
   if (err.name === 'CastError') {
     return res.status(400).send({ message: 'Некоректный id' });
   }

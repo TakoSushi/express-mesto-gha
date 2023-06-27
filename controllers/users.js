@@ -2,16 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
-const IncorrectLoginData = require('../errors/incorrect-login-data');
-const AuthorizationError = require('../errors/authorization-error');
+const UnauthorizedError = require('../errors/unauthorized-err');
+const BadRequestError = require('../errors/bad-request-err');
 
-const createUser = (req, res, next) => {
+const createUser = (req, res) => {
   const newUser = req.body;
   if (!newUser.password || !newUser.email) {
-    throw new AuthorizationError('Вы забыли указать почту или пароль');
+    throw new UnauthorizedError('Вы забыли указать почту или пароль');
   }
   if (newUser.password.length < 8) {
-    throw new IncorrectLoginData('Минимальная длина пароля - 8 символов');
+    throw new BadRequestError('Минимальная длина пароля - 8 символов');
   }
   bcrypt.hash(newUser.password, 10)
     .then((hash) => User.create({
@@ -26,7 +26,12 @@ const createUser = (req, res, next) => {
     }) => res.status(201).send({
       name, about, avatar, _id, email,
     }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(444).send({message: `Переданые данные некорректны.
+        ${Object.values(err.errors).map(() => err.message).join(', ')}`});
+      }
+    });
 };
 
 const getAllUsers = (req, res, next) => {
@@ -72,10 +77,10 @@ const changeUserAvatar = (req, res, next) => {
 const login = (req, res, next) => {
   const { email, password } = req.body;
   if (!password || !email) {
-    throw new AuthorizationError('Вы забыли указать почту или пароль');
+    throw new UnauthorizedError('Вы забыли указать почту или пароль');
   }
   if (password.length < 8) {
-    throw new IncorrectLoginData('Минимальная длина пароля - 8 символов');
+    throw new BadRequestError('Минимальная длина пароля - 8 символов');
   }
   return User.findUserByCredentials(email, password)
     .then((user) => {
