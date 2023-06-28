@@ -23,6 +23,10 @@ router.patch('/me/avatar', celebrate({
   }),
 }), changeUserAvatar);
 
-router.get('/:userId', getUserById);
+router.get('/:userId', celebrate({
+  [Segments.PARAMS]: Joi.object().keys({
+    userId: Joi.string().required().alphanum().length(24),
+  }),
+}), getUserById);
 
 module.exports = router;
