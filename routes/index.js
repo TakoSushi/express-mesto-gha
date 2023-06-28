@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { errors } = require('celebrate');
 const userRoutes = require('./users');
 const cardRoutes = require('./cards');
 const authRouter = require('./auth');
@@ -14,10 +15,10 @@ router.use('/users', userRoutes);
 router.use('/cards', cardRoutes);
 
 router.use('*', () => {
-  // res.status(404).send({ message: 'Указан неверный путь' });
   throw new NotFoundError('Указан неверный путь');
 });
 
+router.use(errors());
 router.use(errorsHandler);
 
 module.exports = router;

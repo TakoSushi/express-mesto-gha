@@ -2,14 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
-const UnauthorizedError = require('../errors/unauthorized-err');
-const BadRequestError = require('../errors/bad-request-err');
 
 const createUser = (req, res, next) => {
   const newUser = req.body;
-  if (!newUser.password || !newUser.email) {
-    throw new UnauthorizedError('Вы забыли указать почту или пароль');
-  }
 
   bcrypt.hash(newUser.password, 10)
     .then((hash) => User.create({
@@ -69,12 +64,7 @@ const changeUserAvatar = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
-  if (!password || !email) {
-    throw new UnauthorizedError('Вы забыли указать почту или пароль');
-  }
-  if (password.length < 8) {
-    throw new BadRequestError('Минимальная длина пароля - 8 символов');
-  }
+
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
