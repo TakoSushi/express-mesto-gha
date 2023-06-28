@@ -5,14 +5,12 @@ const NotFoundError = require('../errors/not-found-err');
 const UnauthorizedError = require('../errors/unauthorized-err');
 const BadRequestError = require('../errors/bad-request-err');
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const newUser = req.body;
   if (!newUser.password || !newUser.email) {
     throw new UnauthorizedError('Вы забыли указать почту или пароль');
   }
-  if (newUser.password.length < 8) {
-    throw new BadRequestError('Минимальная длина пароля - 8 символов');
-  }
+
   bcrypt.hash(newUser.password, 10)
     .then((hash) => User.create({
       name: newUser.name,
@@ -26,12 +24,7 @@ const createUser = (req, res) => {
     }) => res.status(201).send({
       name, about, avatar, _id, email,
     }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(444).send({message: `Переданые данные некорректны.
-        ${Object.values(err.errors).map(() => err.message).join(', ')}`});
-      }
-    });
+    .catch(next);
 };
 
 const getAllUsers = (req, res, next) => {
