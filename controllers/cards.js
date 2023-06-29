@@ -21,9 +21,15 @@ const createCard = (req, res, next) => {
 };
 
 const deleteCardById = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail(new NotFoundError('Карточка не найдена'))
-    .then(() => res.status(200).send({ message: 'Пост удален' }))
+    .then((card) => {
+      if (card.owner.equals(req.user._id)) {
+        return Card.findByIdAndDelete(req.params.cardId)
+          .then(() => res.status(200).send({ message: 'Пост удален' }));
+      }
+      throw new ForbiddenError('Недостаточно прав');
+    })
     .catch(next);
 };
 
