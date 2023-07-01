@@ -26,7 +26,7 @@ router.patch('/me/avatar', celebrate({
 
 router.get('/:userId', celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    userId: Joi.string().required().alphanum().length(24),
+    userId: Joi.string().length(24).hex().required(),
   }),
 }), getUserById);
 

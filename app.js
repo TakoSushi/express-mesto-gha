@@ -20,12 +20,12 @@ mongoose.connect(DB_URL)
   .catch(() => console.log('No connection'));
 
 const app = express();
-app.use(limiter);
+
 app.use(helmet());
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-app.use(routes);
+app.use(limiter, routes);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
