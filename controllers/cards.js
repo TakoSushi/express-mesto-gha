@@ -4,8 +4,7 @@ const ForbiddenError = require('../errors/forbidden-err');
 
 const getAllCards = (req, res, next) => {
   Card.find({}, '-__v')
-    .populate('owner')
-    .populate('likes')
+    .populate(['owner, likes'])
     .then((Cards) => res.status(200).send(Cards))
     .catch(next);
 };
@@ -41,7 +40,7 @@ const addLike = (req, res, next) => {
   )
     .populate('likes')
     .orFail(new NotFoundError('Карточка не найдена'))
-    .then((card) => res.status(201).send({ likes: card.likes }))
+    .then((card) => res.status(200).send({ likes: card.likes }))
     .catch(next);
 };
 
