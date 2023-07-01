@@ -13,7 +13,6 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
 mongoose.connect(DB_URL)
   .then(() => {
     console.log('connected to bd');
@@ -21,7 +20,6 @@ mongoose.connect(DB_URL)
   .catch(() => console.log('No connection'));
 
 const app = express();
-
 app.use(limiter);
 app.use(helmet());
 app.use(cookieParser());
